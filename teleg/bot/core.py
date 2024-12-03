@@ -1,5 +1,7 @@
 from aiogram import Bot, Dispatcher, Router
 from aiogram.enums import ParseMode
+from aiogram.client.bot import DefaultBotProperties
+
 
 from os import getenv
 
@@ -11,7 +13,7 @@ load_dotenv()
 
 bot_ = Bot(
     token=getenv('TOKEN_API'),
-    parse_mode=ParseMode.HTML
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
 storage = MemoryStorage()
