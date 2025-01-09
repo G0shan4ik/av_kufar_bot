@@ -31,7 +31,7 @@ async def add_link(message: Message, state: FSMContext):
         site_name = 'kufar'
         if 'cars.av.by' in url:
             site_name = 'av'
-        await first_pars(url, user_id, site_name, admin=True)
+        await first_pars(url, int(user_id), site_name, admin=True)
         await message.answer('added')
 
         await state.clear()

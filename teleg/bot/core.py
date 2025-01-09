@@ -16,6 +16,7 @@ bot_ = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
+admin_id = int(getenv('ADMIN_ID'))
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 router = Router()

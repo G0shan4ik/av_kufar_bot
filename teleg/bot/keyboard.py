@@ -1,13 +1,20 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from teleg.database import ParsInfo
 
+from os import getenv
+from dotenv import load_dotenv
 
-def start_kb(user_id):
-    return ReplyKeyboardMarkup(
-        keyboard=[
+load_dotenv()
+
+ADMIN_ID = getenv('ADMIN_ID')
+
+def start_kb(user_id: int):
+    res_kb = [
             [KeyboardButton(text="Добавить ссылку.")],
             [KeyboardButton(text="Добавить юзера👨‍👩‍👦‍👦")]
-        ],
+        ] if user_id == int(ADMIN_ID) else [[KeyboardButton(text="Добавить ссылку.")]]
+    return ReplyKeyboardMarkup(
+        keyboard=res_kb,
         resize_keyboard=True,
         one_time_keyboard=True
     )

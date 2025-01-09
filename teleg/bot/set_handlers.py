@@ -5,7 +5,7 @@ from aiogram import F
 from aiogram.enums import ParseMode
 from aiogram.utils.markdown import hbold, hlink
 
-from .core import router, dp
+from .core import router, dp, admin_id
 from .commands import set_commands
 from .states import AddState
 from .keyboard import cancel_kb, start_kb, delete_kb
@@ -14,9 +14,10 @@ from .helpers import get_links
 
 @dp.message(CommandStart())
 async def start_cmd(message: Message):
+    user_id = message.from_user.id
     await set_commands()
-    await message.answer(f'{hbold("Доброго времени суток")}', reply_markup=start_kb(message.from_user.id))
-    await message.answer('✋')
+    await message.answer(f'{hbold("Доброго времени суток")} {hbold(" -ADMIN-") if user_id == admin_id else ""}', reply_markup=start_kb(user_id))
+    await message.answer(f'{"✌🏿" if user_id == admin_id else "✋"}')
     await message.answer('Нажмите на кнопку: "Добавить ссылку.", чтобы получать свежие уведомления по вашей ссылке')
 
 
