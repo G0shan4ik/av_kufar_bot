@@ -29,7 +29,7 @@ async def exit_the_state(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router_admin.message(F.text == "Добавить ссылку для юзера👨‍👩‍‍👦")
+@router_admin.message(F.text == "Добавить ссылку для юзера👨‍👩‍👦‍👦")
 async def add_link(message: Message, state: FSMContext):
     if message.from_user.id == ADMIN_ID:
         await message.answer('Какую ссылку хотите установить', reply_markup=admin_kb())
