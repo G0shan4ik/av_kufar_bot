@@ -8,21 +8,13 @@ from bs4 import BeautifulSoup
 import lxml
 
 from .helpers_pars import create_first_data, headers_kuf, headers_av, chunks
-from teleg.database import ParsInfo, Users
+from teleg.database import ParsInfo, Users, ObjectsInfo
 from teleg.bot.core import bot_
-from teleg.bot.keyboard import get_flag_ikb
+from teleg.bot.keyboard import get_flag_ikb, get_obj_ikb
 from teleg.bot.helpers import get_user
 
-import os
-from dotenv import load_dotenv
 
-
-load_dotenv()
-
-# proxy = os.getenv("PROXY")
-
-
-async def first_pars(url: str, user_id: int, site_name: str, admin=False) -> None:
+async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=False) -> None:
     headers = headers_kuf
     if site_name != 'kufar':
         headers = headers_av
@@ -32,8 +24,16 @@ async def first_pars(url: str, user_id: int, site_name: str, admin=False) -> Non
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     if admin:
-        get_user(id_user=user_id, link=url, site_name=site_name)
+        get_user(id_user=user_id, link=url, site_name=site_name, obj=obj)
     mass = []
+
+    if obj:
+        all_ads = soup.select('section')[1:]
+        for item in all_ads:
+            _link: str = item.select_one('a').get('href').split('?')
+            mass.append(int(_link[0].split('/')[-1]))
+        create_first_data(user_id, mass, site_name, obj=True)
+        return
 
     parsed = soup.find('script', id='__NEXT_DATA__')
     parsed_text = parsed.text
@@ -48,6 +48,45 @@ async def first_pars(url: str, user_id: int, site_name: str, admin=False) -> Non
         mass.append(item[__id])
 
     create_first_data(user_id, mass, site_name)
+
+async def pars_objects(url, user_id):
+    result_mass = []
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
+
+    all_ads = soup.select('section')[1:]
+    for item in all_ads:
+        _link: str = item.select_one('a').get('href')
+
+        _select = ObjectsInfo.select().where(
+            ObjectsInfo.ad_id == int(_link.split('?')[0].split('/')[-1]),
+            ObjectsInfo.user_id == user_id,
+            ObjectsInfo.site_name == 'kufar'
+        )
+        if _select.exists():
+            continue
+
+        _link_photo: str = item.select_one('img').get('src')
+        _city: str = item.find(class_=lambda c: c and c.startswith('styles_secondary_')).select_one('p').text
+        _time_publish: str = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
+        _title: str = item.select_one('h3').text
+        _price: str = item.find(class_=lambda c: c and c.startswith('styles_price')).text
+
+        per = ObjectsInfo.create(
+            user=user_id,
+            ad_id=int(_link.split('?')[0].split('/')[-1]),
+            site_name='kufar',
+            link_photo=_link_photo,
+            link=_link,
+            time_publish=_time_publish,
+            price=_price,
+            city=_city,
+            title=_title
+        )
+
+        result_mass.append(per)
+    return result_mass
 
 
 async def get_descr_ad(url):
@@ -256,31 +295,41 @@ async def get_result_parser_av(url, user_id, site_name):
     return result_mass
 
 
-async def send_ads(user_id: int, items: list):
+async def send_ads(user_id: int, items: list, obj: bool = False):
     for item in items:
         text = repr(item)
-        all_photos = item.link_photo.split(' ')
+        if obj:
+            await bot_.send_photo(
+                chat_id=user_id,
+                photo=item.link_photo,
+                caption=text,
+                reply_markup=get_obj_ikb(item=item)
+            )
+        else:
+            all_photos = item.link_photo
 
-        await bot_.send_photo(
-            chat_id=user_id,
-            photo=all_photos[0],
-            caption=text,
-            reply_markup=get_flag_ikb(item=item)
-        )
+            await bot_.send_photo(
+                chat_id=user_id,
+                photo=all_photos,
+                caption=text,
+                reply_markup=get_flag_ikb(item=item)
+            )
 
 
-async def pars_manager(item: Users, user_id: int):
+async def pars_manager(item: Users, user_id: int, obj: bool = False):
     data = None
-
-    if item.site_name == 'kufar':
+    if obj and item.site_name == 'kufar':
+        data = await pars_objects(url=item.pars_link, user_id=user_id)
+    elif item.site_name == 'kufar' and not obj:
         data = await get_result_parser_kuf(url=item.pars_link, user_id=user_id, site_name='kufar')
-    if item.site_name == 'av':
+    elif item.site_name == 'av':
         data = await get_result_parser_av(url=item.pars_link, user_id=user_id, site_name='av')
 
     if isinstance(data, list) and len(data) >= 1:
         await send_ads(
             user_id=user_id,
-            items=data
+            items=data,
+            obj=obj
         )
     await asyncio.sleep(0.5)
 
@@ -293,7 +342,7 @@ async def schedule():
 
         for item in select_:
             user_id = item.user_id
-            processes.append(pars_manager(item=item, user_id=user_id))
+            processes.append(pars_manager(item=item, user_id=user_id, obj=item.obj))
 
-        for items in chunks(processes, 4):
+        for items in chunks(processes, 10):
             await asyncio.gather(*items)

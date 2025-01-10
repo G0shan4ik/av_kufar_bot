@@ -1,13 +1,20 @@
-from teleg.database import ParsInfo
+from teleg.database import ParsInfo, ObjectsInfo
 
 
-def create_first_data(user_id, data, site_name):
-    for id in data:
-        ParsInfo.get_or_create(
-            user_id=user_id,
-            ad_id=id,
-            site_name=site_name
-        )
+def create_first_data(user_id, data, site_name, obj=False):
+    for _id in data:
+        if obj:
+            ObjectsInfo.get_or_create(
+                user_id=user_id,
+                ad_id=_id,
+                site_name=site_name
+            )
+        else:
+            ParsInfo.get_or_create(
+                user_id=user_id,
+                ad_id=_id,
+                site_name=site_name
+            )
 
 
 def chunks(lst, n):

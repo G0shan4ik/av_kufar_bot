@@ -35,6 +35,7 @@ class Users(BaseModel):
     user_id = BigIntegerField(unique=False)
     pars_link = TextField(default='', null=True)
     site_name = TextField(default='', null=True)
+    obj = BooleanField(default=False, null=True)
 
 
 class ParsInfo(BaseModel):
@@ -69,7 +70,28 @@ class ParsInfo(BaseModel):
             f'{hbold(self.crg)}{f", {hbold(self.phone)}" if self.phone else ""}.\n\n' \
             f'{hitalic("Описание:  ")}{send_text(str(self.descr))}'
 
+class ObjectsInfo(BaseModel):
+    user = ForeignKeyField(Users)
+    ad_id = BigIntegerField(default=0, null=True)
+    site_name = TextField(default='', null=True)
+    link_photo = TextField(default='', null=True)
+    link = TextField(default='', null=True)
+    time_publish = TextField(null=True)
+    price = TextField(default='', null=True)
+    city = TextField(default='Неуказан.', null=True)
+    title = TextField(default='', null=True)
+
+    def __repr__(self):
+        return \
+            f'''{hitalic("Сайт")}: {'Av.by' if self.site_name == 'av' else 'Kufar.by'}\n\n''' \
+            f'''{hitalic("Название товара")}:  {hbold(self.title)}.\n\n''' \
+            f"{hitalic('Дата публикации объявления')}: \n" \
+            f"{hbold(self.time_publish)}.\n\n" \
+            f'''{f'{hitalic("Город, Область")}:  {hbold(self.city)}.'}\n\n''' \
+            f'''{hitalic(f"Стоимость товара:")}  {hbold(self.price)}\n\n''' \
+
 
 def init():
     Users.create_table(safe=True)
     ParsInfo.create_table(safe=True)
+    ObjectsInfo.create_table(safe=True)
