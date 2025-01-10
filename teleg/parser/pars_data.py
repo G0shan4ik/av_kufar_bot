@@ -344,5 +344,6 @@ async def schedule():
             user_id = item.user_id
             processes.append(pars_manager(item=item, user_id=user_id, obj=item.obj))
 
-        for items in chunks(processes, 10):
+        for items in chunks(processes, 3):
             await asyncio.gather(*items)
+            await asyncio.sleep(0.5)
