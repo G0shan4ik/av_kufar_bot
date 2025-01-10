@@ -12,8 +12,11 @@ def start_kb(user_id: int):
     res_kb = [
             [KeyboardButton(text="Следить за авто.")],
             [KeyboardButton(text="Следить за другим объектом.")],
-            [KeyboardButton(text="Добавить ссылку для юзера👨‍👩‍👦‍👦")]
-        ] if user_id == int(ADMIN_ID) else [[KeyboardButton(text="Добавить ссылку.")]]
+            [KeyboardButton(text="Добавить ссылку для юзера")]
+        ] if user_id == int(ADMIN_ID) else [
+        [KeyboardButton(text="Следить за авто.")],
+        [KeyboardButton(text="Следить за другим объектом.")],
+    ]
     return ReplyKeyboardMarkup(
         keyboard=res_kb,
         resize_keyboard=True,
@@ -24,7 +27,7 @@ def admin_kb():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Ссылка для авто."), KeyboardButton(text="Ссылка для товара.")],
-            [[KeyboardButton(text="Отмена")]]
+            [KeyboardButton(text="Отмена")]
         ],
         resize_keyboard=True,
         one_time_keyboard=True
