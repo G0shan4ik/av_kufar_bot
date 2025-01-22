@@ -101,7 +101,11 @@ async def get_result_parser_kuf(url, user_id, site_name):
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     parsed = soup.find('script', id='__NEXT_DATA__')
-    parsed_text = parsed.text
+    try:
+        parsed_text = parsed.text
+    except AttributeError:
+        await asyncio.sleep(10)
+        return
     parsed_json: dict = loads(parsed_text)
     ads = parsed_json['props']['initialState']['listing']['ads']
     pattern = '%Y-%m-%dT%H:%M:%S'
