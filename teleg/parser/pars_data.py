@@ -9,7 +9,7 @@ import lxml
 
 from .helpers_pars import create_first_data, headers_kuf, headers_av, chunks
 from teleg.database import ParsInfo, Users, ObjectsInfo
-from teleg.bot.core import bot_
+from teleg.bot.core import bot_, admin_id
 from teleg.bot.keyboard import get_flag_ikb, get_obj_ikb
 from teleg.bot.helpers import get_user
 
@@ -104,6 +104,10 @@ async def get_result_parser_kuf(url, user_id, site_name):
     try:
         parsed_text = parsed.text
     except AttributeError:
+        await bot_.send_message(
+            chat_id=admin_id,
+            text=f'{url}'
+        )
         await asyncio.sleep(10)
         return
     parsed_json: dict = loads(parsed_text)
