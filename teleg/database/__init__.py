@@ -22,7 +22,7 @@ def send_text(string: str) -> str:
     arr = string.split()
     if len(arr) <= 75:
         return string
-    return f"{' '.join(arr[:80])} ...(остальное на сайте)"
+    return f"{' '.join(arr[:70])} ...(остальное на сайте)"
 
 
 class BaseModel(Model):
@@ -78,7 +78,6 @@ class ObjectsInfo(BaseModel):
     link = TextField(default='', null=True)
     time_publish = TextField(null=True)
     price = TextField(default='', null=True)
-    city = TextField(default='Неуказан.', null=True)
     title = TextField(default='', null=True)
 
     def __repr__(self):
@@ -87,7 +86,6 @@ class ObjectsInfo(BaseModel):
             f'''{hitalic("Название товара")}:  {hbold(self.title)}.\n\n''' \
             f"{hitalic('Дата публикации объявления')}: \n" \
             f"{hbold(self.time_publish)}.\n\n" \
-            f'''{f'{hitalic("Город, Область")}:  {hbold(self.city)}.'}\n\n''' \
             f'''{hitalic(f"Стоимость товара:")}  {hbold(self.price)}\n\n''' \
 
 

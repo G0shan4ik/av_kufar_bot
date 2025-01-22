@@ -52,40 +52,38 @@ async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=Fa
 async def pars_objects(url, user_id):
     result_mass = []
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
+        async with session.get(url) as response1:
+            soup1 = BeautifulSoup(await response1.text(encoding='utf-8'), 'lxml')
 
-    all_ads = soup.select('section')[1:]
-    for item in all_ads:
-        _link: str = item.select_one('a').get('href')
+        all_ads = soup1.select('section')[1:]
+        for item in all_ads:
+            _link: str = item.select_one('a').get('href')
 
-        _select = ObjectsInfo.select().where(
-            ObjectsInfo.ad_id == int(_link.split('?')[0].split('/')[-1]),
-            ObjectsInfo.user_id == user_id,
-            ObjectsInfo.site_name == 'kufar'
-        )
-        if _select.exists():
-            continue
+            _select = ObjectsInfo.select().where(
+                ObjectsInfo.ad_id == int(_link.split('?')[0].split('/')[-1]),
+                ObjectsInfo.user_id == user_id,
+                ObjectsInfo.site_name == 'kufar'
+            )
+            if _select.exists():
+                continue
+            async with session.get(_link) as response2:
+                soup2 = BeautifulSoup(await response2.text(encoding='utf-8'), 'lxml')
+            _link_photo: str = soup2.select_one('div.swiper-zoom-container').select_one('img').get('src')
+            _time_publish: str = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
+            _title: str = soup2.select_one('h1').text
+            _price: str = soup2.find('span', class_=lambda c: c and c.startswith('styles_main__')).text
+            per = ObjectsInfo.create(
+                user=user_id,
+                ad_id=int(_link.split('?')[0].split('/')[-1]),
+                site_name='kufar',
+                link_photo=_link_photo,
+                link=_link,
+                time_publish=_time_publish,
+                price=_price,
+                title=_title
+            )
 
-        _link_photo: str = item.select_one('img').get('src')
-        _city: str = item.find(class_=lambda c: c and c.startswith('styles_secondary_')).select_one('p').text
-        _time_publish: str = datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S')
-        _title: str = item.select_one('h3').text
-        _price: str = item.find(class_=lambda c: c and c.startswith('styles_price')).text
-
-        per = ObjectsInfo.create(
-            user=user_id,
-            ad_id=int(_link.split('?')[0].split('/')[-1]),
-            site_name='kufar',
-            link_photo=_link_photo,
-            link=_link,
-            time_publish=_time_publish,
-            price=_price,
-            city=_city,
-            title=_title
-        )
-
-        result_mass.append(per)
+            result_mass.append(per)
     return result_mass
 
 
@@ -118,7 +116,7 @@ async def get_result_parser_kuf(url, user_id, site_name):
             ParsInfo.site_name == site_name
         )
         if _select.exists():
-            break
+            continue
 
         time_publish = datetime.datetime.strptime(ad['list_time'][:-1], pattern)
         link_photo = []
@@ -226,7 +224,7 @@ async def get_result_parser_av(url, user_id, site_name):
             ParsInfo.site_name == site_name
         )
         if _select.exists():
-            break
+            continue
 
         name_ = ''
         link_photo = []
@@ -306,11 +304,11 @@ async def send_ads(user_id: int, items: list, obj: bool = False):
                 reply_markup=get_obj_ikb(item=item)
             )
         else:
-            all_photos = item.link_photo
+            all_photos = item.link_photo.split(' ')
 
             await bot_.send_photo(
                 chat_id=user_id,
-                photo=all_photos,
+                photo=all_photos[0],
                 caption=text,
                 reply_markup=get_flag_ikb(item=item)
             )
@@ -344,6 +342,6 @@ async def schedule():
             user_id = item.user_id
             processes.append(pars_manager(item=item, user_id=user_id, obj=item.obj))
 
-        for items in chunks(processes, 3):
+        for items in chunks(processes, 4):
             await asyncio.gather(*items)
             await asyncio.sleep(0.5)
