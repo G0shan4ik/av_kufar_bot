@@ -7,7 +7,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 import lxml
 
-from .helpers_pars import create_first_data, headers_kuf, headers_av, chunks
+from .helpers_pars import create_first_data, headers_kuf, headers_av, chunks, get_delay
 from teleg.database import ParsInfo, Users, ObjectsInfo
 from teleg.bot.core import bot_, admin_id
 from teleg.bot.keyboard import get_flag_ikb, get_obj_ikb
@@ -107,6 +107,10 @@ async def get_result_parser_kuf(url, user_id, site_name):
         await bot_.send_message(
             chat_id=admin_id,
             text=f'{url}'
+        )
+        await bot_.send_message(
+            chat_id=admin_id,
+            text=f'{soup}'
         )
         await asyncio.sleep(10)
         return
@@ -352,4 +356,4 @@ async def schedule():
 
         for items in chunks(processes, 4):
             await asyncio.gather(*items)
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(get_delay())
