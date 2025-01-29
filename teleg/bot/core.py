@@ -17,6 +17,7 @@ bot_ = Bot(
 )
 
 admin_id = int(getenv('ADMIN_ID'))
+user_id_1 = int(getenv('USER_ID_1'))
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 router = Router()

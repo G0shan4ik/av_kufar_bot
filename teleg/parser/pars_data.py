@@ -10,7 +10,7 @@ import lxml
 
 from .helpers_pars import create_first_data, headers_kuf, headers_av, chunks, get_delay
 from teleg.database import ParsInfo, Users, ObjectsInfo
-from teleg.bot.core import bot_, admin_id
+from teleg.bot.core import bot_, admin_id, user_id_1
 from teleg.bot.keyboard import get_flag_ikb, get_obj_ikb
 from teleg.bot.helpers import get_user
 
@@ -350,6 +350,128 @@ async def pars_manager(item: Users, user_id: int, obj: bool = False):
     await asyncio.sleep(0.5)
 
 
+async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/cars?cur=USD&prc=r%3A0%2C1500&sort=lst.d'):
+    async with aiohttp.ClientSession(headers=headers_kuf) as session:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
+            soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
+
+    parsed = soup.find('script', id='__NEXT_DATA__')
+    try:
+        parsed_text = parsed.text
+    except AttributeError:
+        await bot_.send_message(
+            chat_id=admin_id,
+            text=f'{url}'
+        )
+        print('\n\n', soup, '\n\n')
+        await asyncio.sleep(10)
+        return
+    parsed_json: dict = loads(parsed_text)
+    ads = parsed_json['props']['initialState']['listing']['ads']
+    pattern = '%Y-%m-%dT%H:%M:%S'
+
+    result_mass = []
+    name, cre, crca, rgd, crg = '', '', '', '', ''
+    for ad in ads:
+        __id = ad['ad_id']
+        _select = ParsInfo.select().where(
+            ParsInfo.ad_id == __id,
+            ParsInfo.user_id == admin_id,
+            ParsInfo.site_name == 'kufar'
+        )
+        if _select.exists():
+            continue
+
+        key_words, flag = ['сроч', 'Сроч'], False
+        descr = await get_descr_ad(ad['ad_link'])
+        for wr in key_words:
+            if wr in descr:
+                flag = True
+                break
+        if not flag:
+            continue
+
+        time_publish = datetime.datetime.strptime(ad['list_time'][:-1], pattern)
+        link_photo = []
+        link = ad['ad_link']
+
+        city_ = ''
+        name_ = ''
+
+        price = 'Договорная' if int(ad['price_usd']) == 0 else ad['price_usd'][:-2]
+
+        for ac_param in ad['account_parameters']:
+            try:
+                if len(ad['account_parameters']) == 1:
+                    name = ac_param['v'].strip()
+                else:
+                    if ac_param['p'] == 'contact_person':
+                        name = ac_param['v'].strip()
+            except ValueError:
+                name = 'Имя продавца не найдено.'
+
+        for item in ad['ad_parameters']:
+            if item['p'] == 'regdate':
+                rgd = item['v']
+            elif item['p'] == 'cars_engine':
+                cre = item['vl']
+            elif item['p'] == 'cars_capacity':
+                crca = item['vl']
+            elif item['p'] == 'cars_gearbox':
+                crg = item['vl']
+            elif item['pl'] == 'Марка':
+                name_ += item['vl']
+            elif item['pl'] == 'Модель':
+                name_ += f" / {item['vl']}"
+            elif item['pl'] == 'Область':
+                city_ += item['vl']
+            elif item['pl'] == 'Город / Район':
+                city_ += f" / {item['vl']}"
+
+        for img in ad['images']:
+            link_photo.append(f'https://rms.kufar.by/v1/gallery/{img["path"]}')
+
+        if len(link_photo) == 0:
+            link_photo.append(
+                'https://avatars.mds.yandex.net/i?id=8f3d7581c4b4cef65478bc2e72c193a7-5233567-images-thumbs&n=13'
+            )
+
+        time_publish += datetime.timedelta(hours=3)
+
+        per = ParsInfo.create(user=admin_id,
+                              ad_id=__id,
+                              site_name='kufar',
+                              seller=name,
+                              link_photo=' '.join(link_photo),
+                              link=link,
+                              time_publish=time_publish,
+                              price_car=price,
+                              car_name=name_,
+                              city=city_,
+                              cre=cre,
+                              crca=crca,
+                              rgd=rgd,
+                              crg=crg,
+                              descr=descr,
+                              phone=''
+                              )
+
+        text = f"❗️❗️❗️ СРОЧНОЕ ❗️❗️❗️\n{repr(per)}\n❗️❗️❗️❗️❗️❗️❗️❗️❗️"
+        all_photos = per.link_photo.split(' ')
+
+        await bot_.send_photo(
+            chat_id=admin_id,
+            photo=all_photos[0],
+            caption=text,
+            reply_markup=get_flag_ikb(item=per)
+        )
+        await bot_.send_photo(
+            chat_id=user_id_1,
+            photo=all_photos[0],
+            caption=text,
+            reply_markup=get_flag_ikb(item=per)
+        )
+
 async def schedule():
     while True:
         await asyncio.sleep(2)
@@ -361,5 +483,6 @@ async def schedule():
             processes.append(pars_manager(item=item, user_id=user_id, obj=item.obj))
 
         for items in chunks(processes, 4):
+            items.append(pars_sale_cars())
             await asyncio.gather(*items)
             await asyncio.sleep(get_delay())
