@@ -1,6 +1,7 @@
 import datetime
 from json import loads
 import asyncio
+from random import randint
 from typing import Awaitable
 
 import aiohttp
@@ -13,6 +14,14 @@ from teleg.bot.core import bot_, admin_id
 from teleg.bot.keyboard import get_flag_ikb, get_obj_ikb
 from teleg.bot.helpers import get_user
 
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+proxy: list = os.getenv("PROXY").split('$')
+
 
 async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=False) -> None:
     headers = headers_kuf
@@ -20,7 +29,7 @@ async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=Fa
         headers = headers_av
 
     async with aiohttp.ClientSession(headers=headers) as session:
-        async with session.get(url) as response:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     if admin:
@@ -52,7 +61,7 @@ async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=Fa
 async def pars_objects(url, user_id):
     result_mass = []
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response1:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response1:
             soup1 = BeautifulSoup(await response1.text(encoding='utf-8'), 'lxml')
 
         all_ads = soup1.select('section')[1:]
@@ -89,7 +98,7 @@ async def pars_objects(url, user_id):
 
 async def get_descr_ad(url):
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
@@ -97,7 +106,7 @@ async def get_descr_ad(url):
 
 async def get_result_parser_kuf(url, user_id, site_name):
     async with aiohttp.ClientSession(headers=headers_kuf) as session:
-        async with session.get(url) as response:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     parsed = soup.find('script', id='__NEXT_DATA__')
@@ -200,7 +209,7 @@ async def get_result_parser_kuf(url, user_id, site_name):
 
 async def get_phone_av(url):
     async with aiohttp.ClientSession(headers=headers_av) as session:
-        async with session.get(url) as response:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     parsed = soup.find('script', id='__NEXT_DATA__')
@@ -213,7 +222,7 @@ async def get_phone_av(url):
 
 async def get_result_parser_av(url, user_id, site_name):
     async with aiohttp.ClientSession(headers=headers_av) as session:
-        async with session.get(url) as response:
+        async with session.get(url, proxy=proxy[randint(0, 5)]) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     parsed = soup.find('script', id='__NEXT_DATA__')
