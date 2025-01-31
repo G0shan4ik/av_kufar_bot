@@ -350,7 +350,7 @@ async def pars_manager(item: Users, user_id: int, obj: bool = False):
     await asyncio.sleep(0.5)
 
 
-async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/cars?cur=USD&prc=r%3A0%2C1500&sort=lst.d'):
+async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/cars?cur=USD&prc=r%3A0%2C2000&sort=lst.d'):
     async with aiohttp.ClientSession(headers=headers_kuf) as session:
         async with session.get(url) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
@@ -382,7 +382,7 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/cars?cur=USD&prc=r%
         if _select.exists():
             continue
 
-        key_words, flag = ['сроч', 'Сроч'], False
+        key_words, flag = ['срочно', 'Срочно'], False
         descr = await get_descr_ad(ad['ad_link'])
         for wr in key_words:
             if wr in descr:
