@@ -45,7 +45,7 @@ def get_correct_current_time():
 def get_delay() -> int:
     tm = get_correct_current_time().time()
     current_time = datetime.strptime(tm.strftime("%H:%M"), "%H:%M").time()
-    delay = 2
+    delay = 10
 
     morning_time = datetime.strptime("07:00", "%H:%M").time()
     morning_time2 = datetime.strptime("11:00", "%H:%M").time()
@@ -58,14 +58,14 @@ def get_delay() -> int:
     night_time = datetime.strptime("00:00", "%H:%M").time()
 
     if morning_time <= current_time <= morning_time2:
-        delay = 2
+        delay = 20
     elif morning_time2 <= current_time <= day_time:
-        delay = 1
+        delay = 12
     elif day_time <= current_time <= evening_time:
-        delay = 2
+        delay = 25
     elif evening_time <= current_time <= evening_time2:
-        delay = 3
+        delay = 35
     elif night_time <= current_time <= morning_time:
-        delay = 7
+        delay = 100
 
     return delay

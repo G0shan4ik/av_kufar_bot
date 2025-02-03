@@ -97,18 +97,11 @@ async def pars_objects(url, user_id):
 
 
 async def get_descr_ad(url):
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
-        return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
-    except:
-        print(f'\nUrl: {url}\n, Soup: {soup}\n')
-        await bot_.send_message(
-            chat_id=admin_id,
-            text='err'
-        )
+    return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
 
 
 async def get_result_parser_kuf(url, user_id, site_name):
@@ -377,14 +370,13 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/ca
     ads = parsed_json['props']['initialState']['listing']['ads']
     pattern = '%Y-%m-%dT%H:%M:%S'
 
-    result_mass = []
     name, cre, crca, rgd, crg = '', '', '', '', ''
     for ad in ads:
         __id = ad['ad_id']
         _select = ParsInfo.select().where(
             ParsInfo.ad_id == __id,
             ParsInfo.user_id == admin_id,
-            ParsInfo.site_name == 'kufar'
+            ParsInfo.site_name == 'kufar_!'
         )
         if _select.exists():
             continue
@@ -492,4 +484,5 @@ async def schedule():
         for items in chunks(processes, 2):
             items.append(pars_sale_cars())
             await asyncio.gather(*items)
-            await asyncio.sleep(get_delay())
+            await asyncio.sleep(5)
+        # await asyncio.sleep(get_delay())
