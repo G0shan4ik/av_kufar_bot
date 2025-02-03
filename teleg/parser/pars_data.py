@@ -97,11 +97,18 @@ async def pars_objects(url, user_id):
 
 
 async def get_descr_ad(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
-    return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
+        return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
+    except:
+        print(f'\nUrl: {url}\n, Soup: {soup}\n')
+        await bot_.send_message(
+            chat_id=admin_id,
+            text='err'
+        )
 
 
 async def get_result_parser_kuf(url, user_id, site_name):
