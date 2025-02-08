@@ -117,7 +117,6 @@ async def get_result_parser_kuf(url, user_id, site_name):
             chat_id=admin_id,
             text=f'{url}'
         )
-        print('\n\n', soup, '\n\n')
         await asyncio.sleep(10)
         return
     parsed_json: dict = loads(parsed_text)
@@ -363,7 +362,6 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/ca
             chat_id=admin_id,
             text=f'{url}'
         )
-        print('\n\n', soup, '\n\n')
         await asyncio.sleep(10)
         return
     parsed_json: dict = loads(parsed_text)
