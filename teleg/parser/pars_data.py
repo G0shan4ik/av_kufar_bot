@@ -437,7 +437,7 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/ca
 
         per = ParsInfo.create(user=admin_id,
                               ad_id=__id,
-                              site_name='kufar',
+                              site_name='kufar_!',
                               seller=name,
                               link_photo=' '.join(link_photo),
                               link=link,
@@ -483,4 +483,4 @@ async def schedule():
             items.append(pars_sale_cars())
             await asyncio.gather(*items)
             await asyncio.sleep(5)
-        # await asyncio.sleep(get_delay())
+        await asyncio.sleep(get_delay())
