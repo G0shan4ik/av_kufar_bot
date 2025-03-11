@@ -20,8 +20,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-proxy: list = os.getenv("PROXY").split('$')
-
 
 async def first_pars(url: str, user_id: int, site_name: str, admin=False, obj=False) -> None:
     headers = headers_kuf
