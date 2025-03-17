@@ -99,7 +99,20 @@ async def get_descr_ad(url):
         async with session.get(url) as response:
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
-    return soup.select_one('div.styles_description_content__raCHR').text.replace('\n', '')
+    parsed = soup.find('script', id='__NEXT_DATA__')
+    try:
+        parsed_text = parsed.text
+    except AttributeError:
+        await bot_.send_message(
+            chat_id=admin_id,
+            text=f'Description err: {url}'
+        )
+        await asyncio.sleep(10)
+        return
+    parsed_json: dict = loads(parsed_text)
+    descr = parsed_json['props']['initialState']['adView']['data']
+
+    return descr['description'].replace('\n', '')
 
 
 async def get_result_parser_kuf(url, user_id, site_name):
@@ -113,7 +126,7 @@ async def get_result_parser_kuf(url, user_id, site_name):
     except AttributeError:
         await bot_.send_message(
             chat_id=admin_id,
-            text=f'{url}'
+            text=f'Pars simple cars url err: {url}'
         )
         await asyncio.sleep(10)
         return
@@ -358,7 +371,7 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/ca
     except AttributeError:
         await bot_.send_message(
             chat_id=admin_id,
-            text=f'{url}'
+            text=f'Pars sale cars url err: {url}'
         )
         await asyncio.sleep(10)
         return
@@ -460,16 +473,20 @@ async def pars_sale_cars(url: str = 'https://auto.kufar.by/l/r~brestskaya-obl/ca
             caption=text,
             reply_markup=get_flag_ikb(item=per)
         )
-        await bot_.send_photo(
-            chat_id=user_id_1,
-            photo=all_photos[0],
-            caption=text,
-            reply_markup=get_flag_ikb(item=per)
-        )
+        try:
+            await bot_.send_photo(
+                chat_id=user_id_1,
+                photo=all_photos[0],
+                caption=text,
+                reply_markup=get_flag_ikb(item=per)
+            )
+        except:
+            print(f'\n<--- User {user_id_1} Not Found 404 --->\n')
 
 async def schedule():
     while True:
-        await asyncio.sleep(2)
+        await asyncio.sleep(get_delay())
+
         select_: list[Users] = Users.select()
         processes: [Awaitable] = []
 
