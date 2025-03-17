@@ -100,7 +100,7 @@ async def get_descr_ad(url):
             soup = BeautifulSoup(await response.text(encoding='utf-8'), 'lxml')
 
     parsed = soup.find('script', id='__NEXT_DATA__')
-    print(f'\n\n\n\nPars_url: {url}\n\nParsed: {parsed}\n\n\n')
+    print(f'\n\n\n\nPars_url: {url}\n\nParsed: {parsed}\n\n\nHTML: {soup}\n\n\n')
     try:
         parsed_text = parsed.text
     except AttributeError:
